@@ -8,7 +8,21 @@ function load() {
         setInterval(function () {
             speak()
         }, interval)
-    }, timeout);
+    }, timeout)
+
+    chrome.extension.onConnect.addListener(function (port) {
+        port.onMessage.addListener(function (msg) {
+            switch (msg) {
+                case "":
+
+                    break
+
+                default:
+                    speak()
+                    break
+            }
+        })
+    })
 }
 
 function cuentaMinutos(minutos) {
