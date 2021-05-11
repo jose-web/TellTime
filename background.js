@@ -70,7 +70,7 @@ function speak() {
             minutos = " y cuarto"
             break
 
-        case 15:
+        case 30:
             minutos = " y media"
             break
 
