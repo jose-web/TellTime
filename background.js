@@ -1,5 +1,7 @@
 let TIMEOUT
 let INTERVAL
+let REMAINING_TIME
+
 function load() {
     crear(30, true)
 
@@ -20,22 +22,39 @@ function load() {
             }
         })
     })
+
+    chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+        if (request.action === "getRemainingTime") {
+            sendResponse({ remainingTime: REMAINING_TIME });
+        }
+    })
+
 }
 
 function crear(minutos, fijo) {
-    console.log(minutos);
+
     clearTimeout(TIMEOUT)
     clearInterval(INTERVAL)
 
     let miliTimeout = cuentaMinutos(minutos, fijo)
+    setReminingTime(miliTimeout)
 
     TIMEOUT = setTimeout(function () {
-        speak()
         let miliInterval = cuentaMinutos(minutos)
+        setReminingTime(miliInterval)
+        speak()
+
         INTERVAL = setInterval(function () {
+            setReminingTime(miliInterval)
             speak()
         }, miliInterval)
     }, miliTimeout)
+
+}
+
+function setReminingTime(miliseconds) {
+    let d = new Date()
+    REMAINING_TIME = d.setTime(d.getTime() + miliseconds)
 }
 
 function cuentaMinutos(minutos, fijo) {

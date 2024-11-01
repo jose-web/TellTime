@@ -9,16 +9,18 @@
 </head>
 
 <body>
-    <input type="radio" name="opcion" id="mediaHora" value="mediaHora" checked>
-    <label for="mediaHora">Cada MediaHora</label>
-
-    <input type="radio" name="opcion" id="hora" value="hora">
+    <input type="radio" name="opcion" id="hora" value="hora" checked>
     <label for="hora">Cada hora</label>
 
+    <input type="radio" name="opcion" id="mediaHora" value="mediaHora">
+    <label for="mediaHora">Cada MediaHora</label>
+
     <div id="personalizado">
-        Cada <input type="number" id="numero">
+        Cada <input type="number" id="numero" min="1">
         <label for="numero">minutos</label>
     </div>
+
+    <p id="remainingTime">Cargando...</p>
 
     <script src="popup.js"></script>
 </body>
