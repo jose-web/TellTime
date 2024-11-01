@@ -1,6 +1,6 @@
 function load() {
     var port = chrome.extension.connect({
-        name: "tellTime"
+        name: "TellTime"
     });
 
     var opcion = document.getElementsByName("opcion");

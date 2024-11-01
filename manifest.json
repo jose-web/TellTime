@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
-    "name": "tellTime",
-    "description": "Te dice la hora",
+    "name": "TellTime",
+    "description": "This extension tells the time in a robot voice.",
     "version": "1.0",
     "icons": {
         "128": "128.png"
