@@ -1,0 +1,1 @@
+This extension does't use any data from user.
