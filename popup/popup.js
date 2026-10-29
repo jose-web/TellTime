@@ -1,23 +1,19 @@
 function load() {
-    var port = chrome.extension.connect({
-        name: "TellTime"
-    });
-
     var opcion = document.getElementsByName("opcion");
     for (var i = 0; i < opcion.length; i++) {
         opcion[i].addEventListener('click', function () {
             if (this.value != "personalizado")
-                port.postMessage(this.value)
+                chrome.runtime.sendMessage({ action: this.value })
         })
     }
 
     document.getElementById("numero").addEventListener('focusout', function () {
-        port.postMessage(Number(this.value))
+        chrome.runtime.sendMessage({ action: "personalizado", minutos: Number(this.value) })
     })
 
     setInterval(function () {
         chrome.runtime.sendMessage({ action: "getRemainingTime" }, function (response) {
-            let remainingTime = response.remainingTime;
+            let remainingTime = response && response.remainingTime;
 
             if (remainingTime !== undefined) {
 

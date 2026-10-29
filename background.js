@@ -1,60 +1,55 @@
-let TIMEOUT
-let INTERVAL
-let REMAINING_TIME
+// Service worker (Manifest V3): no hay window ni timers persistentes,
+// así que se usan chrome.alarms para programar y chrome.tts para hablar.
+const ALARMA = "telltime"
 
-function load() {
-    crear(30, true)
+chrome.runtime.onInstalled.addListener(iniciar)
+chrome.runtime.onStartup.addListener(iniciar)
 
-    chrome.extension.onConnect.addListener(function (port) {
-        port.onMessage.addListener(function (msg) {
-            switch (msg) {
-                case "hora":
-                    crear(60, true)
-                    break
-
-                case "mediaHora":
-                    crear(30, true)
-                    break
-
-                default:
-                    crear(msg)
-                    break
-            }
-        })
-    })
-
-    chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-        if (request.action === "getRemainingTime") {
-            sendResponse({ remainingTime: REMAINING_TIME });
-        }
-    })
-
+async function iniciar() {
+    let { config } = await chrome.storage.local.get("config")
+    if (!config)
+        config = { minutos: 30, fijo: true }
+    crear(config.minutos, config.fijo)
 }
 
-function crear(minutos, fijo) {
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+    switch (request.action) {
+        case "hora":
+            crear(60, true)
+            break
 
-    clearTimeout(TIMEOUT)
-    clearInterval(INTERVAL)
+        case "mediaHora":
+            crear(30, true)
+            break
 
-    let miliTimeout = cuentaMinutos(minutos, fijo)
-    setReminingTime(miliTimeout)
+        case "personalizado":
+            crear(request.minutos)
+            break
 
-    TIMEOUT = setTimeout(function () {
-        let miliInterval = cuentaMinutos(minutos)
-        setReminingTime(miliInterval)
+        case "getRemainingTime":
+            chrome.alarms.get(ALARMA).then(function (alarma) {
+                sendResponse({ remainingTime: alarma ? alarma.scheduledTime : undefined })
+            })
+            return true
+    }
+})
+
+chrome.alarms.onAlarm.addListener(function (alarma) {
+    if (alarma.name === ALARMA)
         speak()
+})
 
-        INTERVAL = setInterval(function () {
-            setReminingTime(miliInterval)
-            speak()
-        }, miliInterval)
-    }, miliTimeout)
+async function crear(minutos, fijo) {
+    if (!(minutos > 0))
+        return
 
-}
+    await chrome.storage.local.set({ config: { minutos: minutos, fijo: !!fijo } })
+    await chrome.alarms.clear(ALARMA)
 
-function setReminingTime(miliseconds) {
-    let d = new Date()
-    REMAINING_TIME = d.setTime(d.getTime() + miliseconds)
+    chrome.alarms.create(ALARMA, {
+        when: Date.now() + cuentaMinutos(minutos, fijo),
+        periodInMinutes: minutos
+    })
 }
 
 function cuentaMinutos(minutos, fijo) {
@@ -62,7 +57,7 @@ function cuentaMinutos(minutos, fijo) {
     let d2 = new Date()
 
     if (fijo)
-        if (d2.getMinutes() > minutos) {
+        if (d2.getMinutes() >= minutos) {
             d2.setMinutes(0)
             d2.setHours(d2.getHours() + 1)
         } else
@@ -106,8 +101,5 @@ function speak() {
 
 
     let decir = "son las " + hora + minutos
-    let utterThis = new SpeechSynthesisUtterance(decir)
-    window.speechSynthesis.speak(utterThis)
+    chrome.tts.speak(decir, { lang: "es-ES" })
 }
-
-window.onload = load
